@@ -1,0 +1,11 @@
+[package]
+name = "ftd2xx-sys"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+[build-dependencies]
+bindgen = "0.71.0"
+cotti-build-support = "0.1.1"
+tempdir = "0.3.7"
