@@ -22,10 +22,8 @@ struct LibPaths {
 /// Library and headers are searched in common directories, plus the env.
 /// variables "LD_LIBRARY_PATH"
 fn get_system_lib_paths() -> LibPaths {
-    let mut possible_lib_paths: Vec<PathBuf> = vec![
-        PathBuf::from("/usr/local/lib"),
-        PathBuf::from("/usr/lib"),
-    ];
+    let mut possible_lib_paths: Vec<PathBuf> =
+        vec![PathBuf::from("/usr/local/lib"), PathBuf::from("/usr/lib")];
 
     let mut possible_headers: Vec<PathBuf> = vec![
         PathBuf::from("/usr/local/include").join(HEADER_NAME),
@@ -39,17 +37,25 @@ fn get_system_lib_paths() -> LibPaths {
         if let Some(dirs) = env::var_os(env_var) {
             // The env. variable may have multiple dirs separated by semicolons
             for dir in dirs.to_string_lossy().split(":") {
-                let absolute_path_from_env = PathBuf::from(&dir).canonicalize().unwrap_or_else(|e| {
-                    panic!("Path in {env_var}={:?} does not exists. Error: {e}", dir);
-                });
+                let absolute_path_from_env =
+                    PathBuf::from(&dir).canonicalize().unwrap_or_else(|e| {
+                        panic!("Path in {env_var}={:?} does not exists. Error: {e}", dir);
+                    });
                 possible_lib_paths.insert(0, absolute_path_from_env.clone());
                 possible_headers.insert(0, absolute_path_from_env.join(HEADER_NAME));
             }
         };
     }
 
-    let possible_dynamic_libs: Vec<PathBuf> = possible_lib_paths.clone().into_iter().map(|path| path.join(DYNAMIC_LIB_NAME)).collect();
-    let possible_static_libs: Vec<PathBuf> = possible_lib_paths.into_iter().map(|path| path.join(STATIC_LIB_NAME)).collect();
+    let possible_dynamic_libs: Vec<PathBuf> = possible_lib_paths
+        .clone()
+        .into_iter()
+        .map(|path| path.join(DYNAMIC_LIB_NAME))
+        .collect();
+    let possible_static_libs: Vec<PathBuf> = possible_lib_paths
+        .into_iter()
+        .map(|path| path.join(STATIC_LIB_NAME))
+        .collect();
 
     let dynamic_lib = possible_dynamic_libs.into_iter().find(|path| path.exists());
     let static_lib = possible_static_libs.into_iter().find(|path| path.exists());
@@ -70,26 +76,32 @@ fn main() {
     // Trying to find the library in the system path
     let lib_paths = get_system_lib_paths();
 
-    if (lib_paths.header.is_none()) ||
-        (feature_static && lib_paths.static_lib.is_none()) ||
-        (!feature_static && lib_paths.dynamic_lib.is_none()) {
-
-        panic!(r#"Couldn't find system library "libftd2xx" installed.
+    if (lib_paths.header.is_none())
+        || (feature_static && lib_paths.static_lib.is_none())
+        || (!feature_static && lib_paths.dynamic_lib.is_none())
+    {
+        panic!(
+            r#"Couldn't find system library "libftd2xx" installed.
 Please, do one of the following:
 - Install the libftd2xx library in "/usr/local/lib".
 - Set the "LD_LIBRARY_PATH" environment variable to the path where the library is installed.
 See the crate documentation for details.
-"#);
+"#
+        );
     }
 
     let lib_dir = match feature_static {
-        true => {lib_paths.static_lib.as_ref().unwrap().parent().unwrap()},
-        false => {lib_paths.dynamic_lib.as_ref().unwrap().parent().unwrap()},
-    };
+        true => lib_paths.static_lib.as_ref().unwrap().parent().unwrap(),
+        false => lib_paths.dynamic_lib.as_ref().unwrap().parent().unwrap(),
+    }
+    .to_string_lossy();
 
     // Tell cargo to look for shared libraries in the specified directory
     // Similar to "-L" flag
-    println!("cargo:rustc-link-search={}", lib_dir.to_string_lossy());
+    println!("cargo:rustc-link-search={}", lib_dir);
+
+    // Add the library dir to the run-time search-path (only useful for this crate)
+    println!("cargo:rustc-link-arg=-Wl,-rpath,{}", lib_dir);
 
     // Tell cargo to tell rustc to link the system ftd2xx shared library.
     // Similar to "-l" flag
