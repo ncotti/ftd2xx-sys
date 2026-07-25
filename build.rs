@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Nicolas Gabriel Cotti
+
 use std::env;
 use std::path::PathBuf;
 use std::path::Path;
