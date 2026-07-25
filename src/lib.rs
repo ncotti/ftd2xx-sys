@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Nicolas Gabriel Cotti
+
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -17,14 +20,12 @@ mod tests {
     #[test]
     fn hi() {
         let mut version: u32 = 0;
-        let status: FT_STATUS = unsafe {
-            FT_GetLibraryVersion(&mut version)
-        };
+        let status: FT_STATUS = unsafe { FT_GetLibraryVersion(&mut version) };
         assert!(status == FT_OK);
 
         let [build, minor, major, _] = version.to_le_bytes();
 
-        let version  = Version{
+        let version = Version {
             major,
             minor,
             build,
