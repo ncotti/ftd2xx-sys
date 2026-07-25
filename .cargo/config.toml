@@ -1,3 +1,0 @@
-[env]
-LIBFTD2XX_SRC_DIR = "vendor"
-LIBFTD2XX_VERSION = "1.4.35"
