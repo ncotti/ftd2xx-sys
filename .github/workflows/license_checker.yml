@@ -14,7 +14,7 @@ jobs:
       REPO_PATH: .
       LICENSE: "MIT"
       COPYRIGHT: "Copyright (c) 2026 Nicolas Gabriel Cotti"
-      EXTENSIONS: ".rs"
+      EXTENSIONS: ".rs .sh"
     steps:
       - name: "Checkout project repo"
         uses: actions/checkout@v5
