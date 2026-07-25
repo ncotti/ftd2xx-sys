@@ -3,7 +3,6 @@
 
 use ftd2xx_sys::*;
 
-
 #[test]
 fn get_library_version() {
     // 0x010435 stands for v01.04.35

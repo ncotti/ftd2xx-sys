@@ -20,7 +20,7 @@ struct LibPaths {
 /// Returns the library and header paths as `Option<PathBuf>`, which may
 /// be `None` if they couldn't be found.
 /// Library and headers are searched in common directories, plus the env.
-/// variables "LIBFTD2XX_DIR" and "LIBFTD2XX_HEADER_DIR".
+/// variables "LD_LIBRARY_PATH"
 fn get_system_lib_paths() -> LibPaths {
     let mut possible_lib_paths: Vec<PathBuf> = vec![
         PathBuf::from("/usr/local/lib"),
@@ -33,7 +33,7 @@ fn get_system_lib_paths() -> LibPaths {
     ];
 
     // The user may provide these env. variable to search for the library
-    let env_vars = ["LIBFTD2XX_DIR", "LIBFTD2XX_HEADER_DIR", "LD_LIBRARY_PATH"];
+    let env_vars = ["LD_LIBRARY_PATH"];
 
     for env_var in env_vars {
         if let Some(dirs) = env::var_os(env_var) {
@@ -65,8 +65,6 @@ fn get_system_lib_paths() -> LibPaths {
 fn main() {
     let feature_static = env::var_os("CARGO_FEATURE_STATIC").is_some();
 
-    println!("cargo:rerun-if-env-changed=LIBFTD2XX_DIR");
-    println!("cargo:rerun-if-env-changed=LIBFTD2XX_HEADER_DIR");
     println!("cargo:rerun-if-env-changed=LD_LIBRARY_PATH");
 
     // Trying to find the library in the system path
@@ -78,9 +76,8 @@ fn main() {
 
         panic!(r#"Couldn't find system library "libftd2xx" installed.
 Please, do one of the following:
-- Install the libftd2xx library.
-- Set the "LIBFTD2XX_DIR" and/or the "LIBFTD2XX_HEADER_DIR" environment variables.
-- Enabled the "bundled" Cargo feature to use a fixed-version of the library included with this crate.
+- Install the libftd2xx library in "/usr/local/lib".
+- Set the "LD_LIBRARY_PATH" environment variable to the path where the library is installed.
 See the crate documentation for details.
 "#);
     }
