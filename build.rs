@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Nicolas Gabriel Cotti
 
+use cotti_build_support as bsup;
 use std::env;
-use std::path::PathBuf;
 use std::path::Path;
+use std::path::PathBuf;
 use std::process::exit;
 use tempdir::TempDir;
-use cotti_build_support as bsup;
 
 struct OsInfo {
     os: String,
@@ -17,14 +17,20 @@ struct OsInfo {
 
 fn check_os() -> OsInfo {
     let os = match std::env::var("CARGO_CFG_TARGET_OS").as_deref() {
-        Ok("linux") => {String::from("linux")},
-        Ok(e) => {panic!("Unsupported platform: {e}. Only Linux is supported")},
-        Err(e) => {panic!("Error: {e}")},
+        Ok("linux") => String::from("linux"),
+        Ok(e) => {
+            panic!("Unsupported platform: {e}. Only Linux is supported")
+        }
+        Err(e) => {
+            panic!("Error: {e}")
+        }
     };
 
     let arch = match std::env::var("CARGO_CFG_TARGET_ARCH").as_deref() {
-        Ok("x86_64") => {String::from("x86_64")},
-        _ => {panic!("Unsupported architecture. Only x86_64 is supported")}
+        Ok("x86_64") => String::from("x86_64"),
+        _ => {
+            panic!("Unsupported architecture. Only x86_64 is supported")
+        }
     };
 
     OsInfo {
@@ -46,8 +52,8 @@ fn check_lib_installed() -> bool {
         Path::new("/usr/include/ftd2xx.h"),
     ];
 
-    let lib_exists = (possible_lib_paths.iter().any(|path| path.exists())) &&
-    (possible_header_paths.iter().any(|path| path.exists()));
+    let lib_exists = (possible_lib_paths.iter().any(|path| path.exists()))
+        && (possible_header_paths.iter().any(|path| path.exists()));
 
     println!("Lib exists? {:?}", lib_exists);
 
@@ -58,15 +64,18 @@ fn check_lib_installed() -> bool {
 /// relative to this package build.
 fn install_lib(os_info: OsInfo) -> PathBuf {
     let tar = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-    .join(&os_info.lib_src_path)
-    .join(format!("libftd2xx-{}-{}-{}.tgz", os_info.os, os_info.arch, os_info.lib_version));
+        .join(&os_info.lib_src_path)
+        .join(format!(
+            "libftd2xx-{}-{}-{}.tgz",
+            os_info.os, os_info.arch, os_info.lib_version
+        ));
 
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 
     bsup::untar(tar, &out_dir).expect("Untar library file should succeed");
 
     let untared_folder_name = format!("{}-{}", os_info.os, os_info.arch);
-    
+
     let output = out_dir.join(untared_folder_name);
     output
 
@@ -95,7 +104,8 @@ fn main() {
     //     install_lib(os_info);
     // }
 
-    let link_search_path: String = format!("cargo:rustc-link-search={}", lib_path.to_string_lossy());
+    let link_search_path: String =
+        format!("cargo:rustc-link-search={}", lib_path.to_string_lossy());
 
     // Tell cargo to look for shared libraries in the specified directory
     // Similar to "-L" flag

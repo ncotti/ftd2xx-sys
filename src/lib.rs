@@ -20,14 +20,12 @@ mod tests {
     #[test]
     fn hi() {
         let mut version: u32 = 0;
-        let status: FT_STATUS = unsafe {
-            FT_GetLibraryVersion(&mut version)
-        };
+        let status: FT_STATUS = unsafe { FT_GetLibraryVersion(&mut version) };
         assert!(status == FT_OK);
 
         let [build, minor, major, _] = version.to_le_bytes();
 
-        let version  = Version{
+        let version = Version {
             major,
             minor,
             build,
