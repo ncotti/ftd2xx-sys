@@ -1,7 +1,16 @@
 [package]
 name = "ftd2xx-sys"
+description = "libftd2xx FFI bindings"
+keywords = ["FTDI", "FFI", "bindings"]
+
+license = "MIT"
+authors = ["Nicolas Gabriel Cotti"]
+
 version = "0.1.0"
 edition = "2024"
+
+readme = "README.md"
+repository = "https://github.com/ncotti/ftd2xx-sys"
 
 [features]
 static = []
