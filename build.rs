@@ -1,122 +1,117 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Nicolas Gabriel Cotti
 
-use cotti_build_support as bsup;
 use std::env;
-use std::path::Path;
 use std::path::PathBuf;
-use std::process::exit;
-use tempdir::TempDir;
 
-struct OsInfo {
-    os: String,
-    arch: String,
-    lib_version: String,
-    lib_src_path: String,
+const LIB_NAME: &str = "ftd2xx";
+const DYNAMIC_LIB_NAME: &str = "libftd2xx.so";
+const STATIC_LIB_NAME: &str = "libftd2xx.a";
+const HEADER_NAME: &str = "ftd2xx.h";
+
+/// Contains the path to the library and header
+struct LibPaths {
+    dynamic_lib: Option<PathBuf>,
+    static_lib: Option<PathBuf>,
+    header: Option<PathBuf>,
 }
 
-fn check_os() -> OsInfo {
-    let os = match std::env::var("CARGO_CFG_TARGET_OS").as_deref() {
-        Ok("linux") => String::from("linux"),
-        Ok(e) => {
-            panic!("Unsupported platform: {e}. Only Linux is supported")
-        }
-        Err(e) => {
-            panic!("Error: {e}")
-        }
-    };
+/// Checks whether the libftd2xx is already installed in your system.
+/// Returns the library and header paths as `Option<PathBuf>`, which may
+/// be `None` if they couldn't be found.
+/// Library and headers are searched in common directories, plus the env.
+/// variables "LD_LIBRARY_PATH"
+fn get_system_lib_paths() -> LibPaths {
+    let mut possible_lib_paths: Vec<PathBuf> =
+        vec![PathBuf::from("/usr/local/lib"), PathBuf::from("/usr/lib")];
 
-    let arch = match std::env::var("CARGO_CFG_TARGET_ARCH").as_deref() {
-        Ok("x86_64") => String::from("x86_64"),
-        _ => {
-            panic!("Unsupported architecture. Only x86_64 is supported")
-        }
-    };
+    let mut possible_headers: Vec<PathBuf> = vec![
+        PathBuf::from("/usr/local/include").join(HEADER_NAME),
+        PathBuf::from("/usr/include").join(HEADER_NAME),
+        PathBuf::from("/usr/local/lib").join(HEADER_NAME),
+        PathBuf::from("/usr/lib").join(HEADER_NAME),
+    ];
 
-    OsInfo {
-        os: os,
-        arch: arch,
-        lib_version: std::env::var("LIBFTD2XX_VERSION").unwrap(),
-        lib_src_path: std::env::var("LIBFTD2XX_SRC_DIR").unwrap(),
+    // The user may provide these env. variable to search for the library
+    let env_vars = ["LD_LIBRARY_PATH"];
+
+    for env_var in env_vars {
+        if let Some(dirs) = env::var_os(env_var) {
+            // The env. variable may have multiple dirs separated by semicolons
+            for dir in dirs.to_string_lossy().split(":") {
+                let absolute_path_from_env =
+                    PathBuf::from(&dir).canonicalize().unwrap_or_else(|e| {
+                        panic!("Path in {env_var}={:?} does not exists. Error: {e}", dir);
+                    });
+                possible_lib_paths.insert(0, absolute_path_from_env.clone());
+                possible_headers.insert(0, absolute_path_from_env.join(HEADER_NAME));
+            }
+        };
+    }
+
+    let possible_dynamic_libs: Vec<PathBuf> = possible_lib_paths
+        .clone()
+        .into_iter()
+        .map(|path| path.join(DYNAMIC_LIB_NAME))
+        .collect();
+    let possible_static_libs: Vec<PathBuf> = possible_lib_paths
+        .into_iter()
+        .map(|path| path.join(STATIC_LIB_NAME))
+        .collect();
+
+    let dynamic_lib = possible_dynamic_libs.into_iter().find(|path| path.exists());
+    let static_lib = possible_static_libs.into_iter().find(|path| path.exists());
+    let header = possible_headers.into_iter().find(|path| path.exists());
+
+    LibPaths {
+        dynamic_lib: dynamic_lib,
+        static_lib: static_lib,
+        header: header,
     }
 }
 
-fn check_lib_installed() -> bool {
-    let possible_lib_paths: [&Path; 2] = [
-        Path::new("/usr/local/lib/libftd2xx.so"),
-        Path::new("/usr/lib/libftd2xx.so"),
-    ];
-
-    let possible_header_paths = [
-        Path::new("/usr/local/include/ftd2xx.h"),
-        Path::new("/usr/include/ftd2xx.h"),
-    ];
-
-    let lib_exists = (possible_lib_paths.iter().any(|path| path.exists()))
-        && (possible_header_paths.iter().any(|path| path.exists()));
-
-    println!("Lib exists? {:?}", lib_exists);
-
-    lib_exists
-}
-
-/// Installs the libtfd2xx library in OUT_DIR, i.e., in a temporal location
-/// relative to this package build.
-fn install_lib(os_info: OsInfo) -> PathBuf {
-    let tar = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join(&os_info.lib_src_path)
-        .join(format!(
-            "libftd2xx-{}-{}-{}.tgz",
-            os_info.os, os_info.arch, os_info.lib_version
-        ));
-
-    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-
-    bsup::untar(tar, &out_dir).expect("Untar library file should succeed");
-
-    let untared_folder_name = format!("{}-{}", os_info.os, os_info.arch);
-
-    let output = out_dir.join(untared_folder_name);
-    output
-
-    // let lib_glob = out_dir
-    //     .join(&untared_folder_name)
-    //     .join("libftd2xx.*");
-    // let header_glob = out_dir
-    //     .join(&untared_folder_name)
-    //     .join("*.h");
-
-    // TODO, put files in OUT_DIR for build
-    //let lib_install_path = Path::new("/usr/local/lib");
-    //let header_install_path = Path::new("/usr/local/include");
-
-    //bsup::install(lib_glob, &lib_install_path).expect("Ok");
-    //bsup::install(header_glob, &header_install_path).expect("Ok");
-}
-
 fn main() {
-    let os_info = check_os();
+    let feature_static = env::var_os("CARGO_FEATURE_STATIC").is_some();
 
-    let lib_path = install_lib(os_info);
+    println!("cargo:rerun-if-env-changed=LD_LIBRARY_PATH");
 
-    // if ! check_lib_installed() {
-    //     println!("Installing lib");
-    //     install_lib(os_info);
-    // }
+    // Trying to find the library in the system path
+    let lib_paths = get_system_lib_paths();
 
-    let link_search_path: String =
-        format!("cargo:rustc-link-search={}", lib_path.to_string_lossy());
+    if (lib_paths.header.is_none())
+        || (feature_static && lib_paths.static_lib.is_none())
+        || (!feature_static && lib_paths.dynamic_lib.is_none())
+    {
+        panic!(
+            r#"Couldn't find system library "libftd2xx" installed.
+Please, do one of the following:
+- Install the libftd2xx library in "/usr/local/lib".
+- Set the "LD_LIBRARY_PATH" environment variable to the path where the library is installed.
+See the crate documentation for details.
+"#
+        );
+    }
+
+    let lib_dir = match feature_static {
+        true => lib_paths.static_lib.as_ref().unwrap().parent().unwrap(),
+        false => lib_paths.dynamic_lib.as_ref().unwrap().parent().unwrap(),
+    }
+    .to_string_lossy();
 
     // Tell cargo to look for shared libraries in the specified directory
     // Similar to "-L" flag
-    println!("{}", link_search_path);
+    println!("cargo:rustc-link-search={}", lib_dir);
+
+    // Add the library dir to the run-time search-path (only useful for this crate)
+    println!("cargo:rustc-link-arg=-Wl,-rpath,{}", lib_dir);
 
     // Tell cargo to tell rustc to link the system ftd2xx shared library.
     // Similar to "-l" flag
-    println!("cargo:rustc-link-lib=ftd2xx");
-
-    let header = PathBuf::from(lib_path).join("ftd2xx.h");
-    let header = header.to_string_lossy();
+    if feature_static {
+        println!("cargo:rustc-link-lib=static={}", LIB_NAME);
+    } else {
+        println!("cargo:rustc-link-lib=dylib={}", LIB_NAME);
+    }
 
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
@@ -124,7 +119,7 @@ fn main() {
     let bindings = bindgen::Builder::default()
         // The input header we would like to generate
         // bindings for.
-        .header(header)
+        .header(lib_paths.header.unwrap().to_string_lossy())
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))

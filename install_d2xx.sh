@@ -2,21 +2,42 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Nicolas Gabriel Cotti
 
-FTDI_LIB="libftd2xx.so"
-FTDI_VERSION="1.4.35"
-FTDI_PATH="ftdi/${FTDI_LIB}.${FTDI_VERSION}"
+# PATH where the library files are. FIrst argument of defaults to "tmp"
+FTDI_SRC_PATH="${1:-tmp}"
 
-## Download .tar file and move library to /usr/local/lib
-if ! find "/usr/lib" "/usr/local/lib" -name "${FTDI_LIB}" | grep -q .; then
-    printf "Installing FTDI library %s\n" "${FTDI_LIB}.${FTDI_VERSION}"
-    sudo cp "${FTDI_PATH}" "/usr/local/lib/"
-    sudo ln -s "/usr/local/lib/${FTDI_LIB}.${FTDI_VERSION}" "/usr/local/lib/${FTDI_LIB}"
-    sudo chmod 0755 "/usr/local/lib/${FTDI_LIB}.${FTDI_VERSION}"
+# FTDI library version. Second argument or defaults to "1.4.35"
+FTDI_VERSION="${2:-1.4.35}"
 
-    # Move header files aswell
+# Name of the dynamic and static libraries
+FTDI_DYN_LIB="libftd2xx.so"
+FTDI_STATIC_LIB="libftd2xx.a"
+
+# Paths where the library will be installed to
+DST_LIB_PATH="/usr/local/lib"
+DST_HEADER_PATH="/usr/local/include"
+
+if [ ! -f "${FTDI_SRC_PATH}/${FTDI_DYN_LIB}" ]; then
+    printf "[Error] Could locate ftd2xx lib files at %s. Please set FTDI_SRC_PATH accordingly.\n" "${FTDI_SRC_PATH}"
+    exit 1
+fi
+
+## Move library to /usr/local/lib
+if ! find "/usr/lib" "/usr/local/lib" -name "${FTDI_DYN_LIB}" | grep -q .; then
+    printf "Installing FTDI library %s\n" "${FTDI_DYN_LIB}.${FTDI_VERSION}"
+    sudo cp "${FTDI_SRC_PATH}/${FTDI_DYN_LIB}.${FTDI_VERSION}" "${DST_LIB_PATH}/"
+    sudo cp "${FTDI_SRC_PATH}/${FTDI_STATIC_LIB}" "${DST_LIB_PATH}/"
+    sudo ln -s "/usr/local/lib/${FTDI_DYN_LIB}.${FTDI_VERSION}" "/usr/local/lib/${FTDI_DYN_LIB}"
+    sudo chmod 0755 \
+        "${DST_LIB_PATH}/${FTDI_DYN_LIB}" \
+        "${DST_LIB_PATH}/${FTDI_DYN_LIB}.${FTDI_VERSION}" \
+        "${DST_LIB_PATH}/${FTDI_STATIC_LIB}"
+
+    # Move header files as well
     sudo mkdir -p "/usr/local/include"
-    sudo cp "ftdi/ftd2xx.h" "/usr/local/include/"
-    sudo cp "ftdi/WinTypes.h" "/usr/local/include/"
+    sudo cp "${FTDI_SRC_PATH}/ftd2xx.h" "${DST_HEADER_PATH}/"
+    sudo cp "${FTDI_SRC_PATH}/WinTypes.h" "${DST_HEADER_PATH}/"
+else
+    printf "Library already installed.\n"
 fi
 
 ## If required, you may install again with:
@@ -30,11 +51,3 @@ if lsmod | grep -q "usbserial"; then
     printf "Removing module \"usbserial\".\n"
     sudo rmmod usbserial
 fi
-
-
-
-
-
-
-
-

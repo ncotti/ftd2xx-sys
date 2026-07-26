@@ -1,0 +1,6 @@
+# FTD2XX-SYS
+
+```bash
+export LIBFTD2XX_DIR=tmp/linux-x86_64
+export LD_LIBRARY_PATH=${LIBFTD2XX_DIR}:${LD_LIBRARY_PATH}
+```

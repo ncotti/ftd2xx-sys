@@ -14,11 +14,19 @@ jobs:
     env:
       REPO_PATH: .
       RUST_PATH: .
+      FTDI_VERSION: "1.4.35"
+      FTDI_SRC_PATH: "vendor/linux-x86_64"
     steps:
       - name: "Checkout project repo"
         uses: actions/checkout@v5
         with:
           path: ${{ env.REPO_PATH }}
+          lfs: true
+
+      - name: "Install libftd2xx"
+        run: |
+          tar -C "${{ env.REPO_PATH }}/vendor" -xzf "vendor/libftd2xx-linux-x86_64-${{ env.FTDI_VERSION }}.tgz"
+          ./install_d2xx.sh ${{ env.REPO_PATH }}/${{ env.FTDI_SRC_PATH }} ${{ env.FTDI_VERSION }}
 
       - name: "Call cargo"
         uses: ncotti/cotti-ci/actions/rust@main
