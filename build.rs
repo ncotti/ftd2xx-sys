@@ -28,6 +28,8 @@ fn get_system_lib_paths() -> LibPaths {
     let mut possible_headers: Vec<PathBuf> = vec![
         PathBuf::from("/usr/local/include").join(HEADER_NAME),
         PathBuf::from("/usr/include").join(HEADER_NAME),
+        PathBuf::from("/usr/local/lib").join(HEADER_NAME),
+        PathBuf::from("/usr/lib").join(HEADER_NAME),
     ];
 
     // The user may provide these env. variable to search for the library
