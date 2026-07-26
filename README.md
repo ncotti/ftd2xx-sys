@@ -16,6 +16,13 @@ To install the library into `/usr/local/lib`, a helper script `install_d2xx.sh` 
 ./install_d2xx.sh [path_to_decompressed_lib] [version]
 ```
 
+Also, you may choose to compile the library statically or dynamically by setting the `static` feature in your Cargo.toml. By default, the library is dynamically linked.
+
+```toml
+[dependencies]
+ftd2xx-sys = { version = "x.x.x", features = ["static"] }
+```
+
 <!-- External links -->
 <!--Note: Lychee fails to with status code: 403 Forbidden for FTDI links -->
 [ftdi_lib]: https://ftdichip.com/drivers/d2xx-drivers/
