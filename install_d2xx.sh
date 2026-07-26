@@ -2,11 +2,11 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Nicolas Gabriel Cotti
 
-# FTDI library version
-FTDI_VERSION="1.4.35"
+# PATH where the library files are. FIrst argument of defaults to "tmp"
+FTDI_SRC_PATH="${1:-tmp}"
 
-# PATH where the library files are
-FTDI_SRC_PATH="tmp"
+# FTDI library version. Second argument or defaults to "1.4.35"
+FTDI_VERSION="${2:-1.4.35}"
 
 # Name of the dynamic and static libraries
 FTDI_DYN_LIB="libftd2xx.so"
