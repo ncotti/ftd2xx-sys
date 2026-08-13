@@ -6,7 +6,7 @@ keywords = ["FTDI", "FFI", "bindings"]
 license = "MIT"
 authors = ["Nicolas Gabriel Cotti"]
 
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 
 readme = "README.md"

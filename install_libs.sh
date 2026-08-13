@@ -31,7 +31,7 @@ if [ ! -f "${D2XX_SRC_PATH}/${D2XX_DYN_LIB}" ]; then
 fi
 
 # FTD2XX library version.
-D2XX_VERSION=$(find ${D2XX_SRC_PATH}/${D2XX_DYN_LIB}.* | sed 's/.*\.so\.//')
+D2XX_VERSION=$(find "${D2XX_SRC_PATH}/${D2XX_DYN_LIB}".* | sed 's/.*\.so\.//')
 
 ## Copy FTD2XX library
 if ! find "${DST_LIB_PATH}" -name "${D2XX_DYN_LIB}" | grep -q .; then
@@ -77,7 +77,7 @@ if [ -n "${MPSSE_SRC_PATH}" ]; then
     fi
 
     # MPSSE library version.
-    MPSSE_VERSION=$(find ${MPSSE_SRC_PATH}/${MPSSE_DYN_LIB}.* | sed 's/.*\.so\.//')
+    MPSSE_VERSION=$(find "${MPSSE_SRC_PATH}/${MPSSE_DYN_LIB}".* | sed 's/.*\.so\.//')
 
     ## Copy MPSSE library
     if ! find "${DST_LIB_PATH}" -name "${MPSSE_DYN_LIB}" | grep -q .; then

@@ -17,7 +17,7 @@ jobs:
       D2XX_TAR_FILE: "vendor/libftd2xx-linux-x86_64-1.4.35.tgz"
       D2XX_SRC_PATH: "vendor/linux-x86_64"
       MPSSE_TAR_FILE: "vendor/libmpsse-x86_64-1.0.9.tgz"
-      MPSSE_SRC_PATH: "vendor/release-x86_64"
+      MPSSE_SRC_PATH: "vendor/release-x86_64/build"
     steps:
       - name: "Checkout project repo"
         uses: actions/checkout@v5
