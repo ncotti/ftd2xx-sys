@@ -18,4 +18,16 @@
 #![allow(unsafe_op_in_unsafe_fn)]
 #![allow(missing_docs)]
 
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+pub mod d2xx {
+    include!(concat!(env!("OUT_DIR"), "/d2xx_bindings.rs"));
+}
+
+#[cfg(feature = "mpsse")]
+pub mod mpsse_i2c {
+    include!(concat!(env!("OUT_DIR"), "/mpsse_i2c_bindings.rs"));
+}
+
+#[cfg(feature = "mpsse")]
+pub mod mpsse_spi {
+    include!(concat!(env!("OUT_DIR"), "/mpsse_spi_bindings.rs"));
+}
