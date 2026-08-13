@@ -14,8 +14,10 @@ jobs:
     env:
       REPO_PATH: .
       RUST_PATH: .
-      FTDI_VERSION: "1.4.35"
-      FTDI_SRC_PATH: "vendor/linux-x86_64"
+      D2XX_TAR_FILE: "vendor/libftd2xx-linux-x86_64-1.4.35.tgz"
+      D2XX_SRC_PATH: "vendor/linux-x86_64"
+      MPSSE_TAR_FILE: "vendor/libmpsse-x86_64-1.0.9.tgz"
+      MPSSE_SRC_PATH: "vendor/release-x86_64"
     steps:
       - name: "Checkout project repo"
         uses: actions/checkout@v5
@@ -25,8 +27,9 @@ jobs:
 
       - name: "Install libftd2xx"
         run: |
-          tar -C "${{ env.REPO_PATH }}/vendor" -xzf "vendor/libftd2xx-linux-x86_64-${{ env.FTDI_VERSION }}.tgz"
-          ./install_d2xx.sh ${{ env.REPO_PATH }}/${{ env.FTDI_SRC_PATH }} ${{ env.FTDI_VERSION }}
+          tar -C "${{ env.REPO_PATH }}/vendor" -xzf "${{ env.D2XX_TAR_FILE }}"
+          tar -C "${{ env.REPO_PATH }}/vendor" -xzf "${{ env.MPSSE_TAR_FILE }}"
+          ./install_libs.sh "${{ env.REPO_PATH }}/${{ env.D2XX_SRC_PATH }}" "${{ env.REPO_PATH }}/${{ env.MPSSE_SRC_PATH }}"
 
       - name: "Call cargo"
         uses: ncotti/cotti-ci/actions/rust@main
